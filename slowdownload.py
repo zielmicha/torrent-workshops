@@ -72,7 +72,7 @@ def init(loop):
     app = web.Application(loop=loop)
     app.router.add_route('GET', '/{name}', handle)
     app.router.add_route('GET', '/', redirect)
-    srv = yield from loop.create_server(app.make_handler(), '127.0.0.1', 5600)
+    srv = yield from loop.create_server(app.make_handler(), '0.0.0.0', 5600)
     return srv
 
 if __name__ == '__main__':
