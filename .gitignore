@@ -1,2 +1,4 @@
 /kotek.jpg
 /venv
+/__pycache__
+*.pyc
