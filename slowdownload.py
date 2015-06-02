@@ -8,6 +8,7 @@ data = open('kotek.jpg', 'rb').read()
 speed = 50 * 1000
 chunk_size = 1000
 chunk_timeout = chunk_size / speed
+content_type = 'image/jpeg'
 
 class SlowResponse(web.StreamResponse):
     def __init__(self, *, status, reason, body, content_type, headers=None):
@@ -25,8 +26,23 @@ class SlowResponse(web.StreamResponse):
             self.write(body[i * chunk_size:(i + 1) * chunk_size])
         yield from super().write_eof()
 
+class HeadResponse(web.StreamResponse):
+    def __init__(self, *, status, reason, body, content_type, headers=None):
+        super().__init__(headers=headers, status=status, reason=reason)
+        self.content_type = content_type
+        self.content_length = len(body)
+
+    @asyncio.coroutine
+    def write_eof(self):
+        pass
+
 @asyncio.coroutine
-def handle(request):
+def handle_head(request):
+    return HeadResponse(body=data, content_type=content_type,
+                        status=200, reason='OK')
+
+@asyncio.coroutine
+def handle_get(request):
     range_header = request.headers.get('RANGE')
     want_range = None
     if range_header:
@@ -51,8 +67,6 @@ def handle(request):
         else:
             return aiohttp.web.HTTPRequestRangeNotSatisfiable()
 
-    content_type = 'image/jpeg'
-
     if want_range:
         split_data = data[want_range[0]:want_range[1]]
         content_range = 'bytes %s-%s/%s' % (want_range[0], want_range[1] - 1, len(data))
@@ -70,7 +84,8 @@ def redirect(request):
 @asyncio.coroutine
 def init(loop):
     app = web.Application(loop=loop)
-    app.router.add_route('GET', '/{name}', handle)
+    app.router.add_route('GET', '/{name}', handle_get)
+    app.router.add_route('HEAD', '/{name}', handle_head)
     app.router.add_route('GET', '/', redirect)
     srv = yield from loop.create_server(app.make_handler(), '0.0.0.0', 5600)
     return srv
