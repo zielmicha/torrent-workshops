@@ -1,6 +1,7 @@
 import hashlib
 import ipaddress
 import struct
+import requests
 
 import bencode
 
@@ -12,8 +13,16 @@ class Torrent(object):
         self.info_binary = bencode.encode(self.info)
         self.info_hash = hashlib.sha1(self.info_binary).digest()
 
+        self.length = self.info[b'length']
+
+        pieces = self.info[b'pieces']
+        self.pieces = [
+            pieces[20 * i: 20 * (i + 1)]
+            for i in range(len(pieces) // 20)
+        ]
+
 def tracker_request(announce, info_hash, *, peer_id, port, uploaded, downloaded, left):
-    resp = requests.get(torrent.announce,
+    resp = requests.get(announce,
                         params=dict(peer_id=peer_id, port=port, uploaded=uploaded,
                                     downloaded=downloaded, left=left, info_hash=info_hash,
                                     compact='1'))
@@ -32,7 +41,7 @@ def tracker_request(announce, info_hash, *, peer_id, port, uploaded, downloaded,
         port = peers[i * 6 + 4: i * 6 + 6]
 
         peer_arr.append((
-            ipaddress.IPv4Address(ip),
+            str(ipaddress.IPv4Address(ip)),
             struct.unpack('!H', port)[0]
         ))
 
@@ -41,7 +50,6 @@ def tracker_request(announce, info_hash, *, peer_id, port, uploaded, downloaded,
 if __name__ == '__main__':
     import sys
     import os
-    import requests
 
     v = bencode.Decoder(sys.stdin.buffer).decode()
     torrent = Torrent(v)
