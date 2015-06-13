@@ -29,6 +29,7 @@ class Peer(object):
         self.torrent = torrent
         self.have_pieces = [False] * len(self.torrent.pieces)
         self.choked = True
+        self.queued_requests = 0
 
     def init(self):
         self.sock.connect(self.addr)
@@ -54,6 +55,81 @@ class Peer(object):
             raise ValueError()
 
         print('connected to %r' % other_id)
+
+    def main(self):
+        while True:
+            self.maybe_send_requests()
+            self.recv()
+
+    def maybe_send_requests(self):
+        if self.choked:
+            return
+
+        while self.queued_requests < 1:
+            self.send_request(0, 0, 16 * 1024)
+
+    def recv(self):
+        length, = struct.unpack('!I', self.file.read(4))
+        print('recv', length)
+        response = self.file.read(length)
+        if len(response) != length:
+            print('response %r' % response)
+            raise EOFError('read %d, expected %d' % (len(response), length))
+
+        print('response', repr(response))
+        type = response[0]
+        payload = response[1:]
+
+        if type == message_types['bitfield']:
+            self.handle_bitfield(payload)
+        elif type == message_types['have']:
+            self.handle_have(payload)
+        elif type == message_types['choke']:
+            self.choked = True
+        elif type == message_types['unchoke']:
+            self.choked = False
+            self.queued_requests = 0
+
+    def handle_bitfield(self, payload):
+        for i in range(len(self.have_pieces)):
+            ch = i // 8
+            bit = i % 8
+            self.have_pieces[i] = (payload[ch] >> bit) & 1
+
+    def handle_have(self, payload):
+        id = struct.unpack('!I', payload)
+        self.have_pieces[id] = True
+
+    def send_request(self, index, begin, length):
+        self.queued_requests += 1
+        self.send(message_types['request'],
+                  struct.pack('!III', index, begin, length))
+
+    def send(self, id, payload):
+        print('send %d %r' % (id, payload))
+        self.file.write(struct.pack('!I', 1 + len(payload)) + bytes([id]))
+        self.file.write(payload)
+
+class Downloader(object):
+    def __init__(self, torrent):
+        self.torrent = torrent
+
+        self.left = torrent.length
+        self.peer_id = os.urandom(20)
+        self.port = 6882
+        self.uploaded = 0
+        self.downloaded = 0
+
+    def main(self):
+        self.tracker_request()
+
+        print(self.tracker_response)
+
+    def tracker_request(self):
+        self.tracker_response = torrent.tracker_request(
+            self.torrent.announce, self.torrent.info_hash,
+            peer_id=self.peer_id, port=self.port, uploaded=self.uploaded,
+            downloaded=self.downloaded, left=self.left)
 
     def recv(self):
         length, = struct.unpack('!I', self.file.read(4))
@@ -85,6 +161,14 @@ class Peer(object):
     def handle_have(self, payload):
         id = struct.unpack('!I', payload)
         self.have_pieces[id] = True
+
+    def send_request(self, index, begin, length):
+        self.send(message_types['request'],
+                  struct.pack('!III', index, begin, length))
+
+    def send(self, id, payload):
+        self.file.write(struct.pack('!I', 1 + len(payload)) + id)
+        self.file.write(payload)
 
 class Downloader(object):
     def __init__(self, torrent):
@@ -123,8 +207,6 @@ if __name__ == '__main__':
         try:
             conn = Peer(addr=peer, peer_id=downloader.peer_id, torrent=t)
             conn.init()
-
-            while True:
-                conn.recv()
+            conn.main()
         except Exception:
             traceback.print_exc()
