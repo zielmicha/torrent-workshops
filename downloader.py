@@ -97,7 +97,7 @@ class Peer(object):
             self.have_pieces[i] = (payload[ch] >> bit) & 1
 
     def handle_have(self, payload):
-        id = struct.unpack('!I', payload)
+        id, = struct.unpack('!I', payload)
         self.have_pieces[id] = True
 
     def send_request(self, index, begin, length):
