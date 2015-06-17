@@ -6,6 +6,7 @@ import os
 import struct
 import math
 import hashlib
+import random
 
 protocol_header = b'\x13BitTorrent protocol'
 header_reserved = b'\0\0\0\0\0\0\0\0'
@@ -21,6 +22,24 @@ message_types = {
     'request': 6,
     'unchoke': 1
 }
+
+class LoggingFile(object):
+    def __init__(self, file, path):
+        self.file = file
+        self.path = path
+        self.log = open('%s.%d' % (self.path, random.randrange(100000)), 'wb')
+
+    def write(self, w):
+        self.file.write(w)
+
+    def flush(self):
+        self.file.flush()
+
+    def read(self, length):
+        data = self.file.read(length)
+        self.log.write(data)
+        self.log.flush()
+        return data
 
 class Peer(object):
     def __init__(self, torrent, peer_id, addr):
@@ -38,6 +57,8 @@ class Peer(object):
 
         print('opened connection to', self.addr)
         self.file = self.sock.makefile('rwb')
+        if os.environ['LOGPEER']:
+            self.file = LoggingFile(self.file, os.environ['LOGPEER'])
         self.file.write(protocol_header + header_reserved)
         self.file.write(self.torrent.info_hash)
         self.file.write(self.peer_id)
@@ -153,6 +174,7 @@ class Downloader(object):
                 self.chunk_queue.append((piece_i, chunk_i, chunk_size))
 
         self.chunk_queue.reverse()
+        random.shuffle(self.chunk_queue)
         print(self.chunk_queue)
 
     def add_data(self, piece_i, begin, data):
