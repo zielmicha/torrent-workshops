@@ -13,6 +13,7 @@ class Torrent(object):
         self.info_binary = bencode.encode(self.info)
         self.info_hash = hashlib.sha1(self.info_binary).digest()
 
+        self.piece_length = self.info[b'piece length']
         self.length = self.info[b'length']
 
         pieces = self.info[b'pieces']
