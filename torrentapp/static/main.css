@@ -1,0 +1,109 @@
+.container {
+    max-width: 790px;
+}
+
+.project-list a {
+    text-decoration: underline;
+}
+
+button a, a.btn {
+    text-decoration: none;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background: url('/images/fractal4.jpg') black;
+    background-size: 100%;
+    background-repeat-y: no;
+    background-attachment: fixed;
+}
+
+.container {
+    margin: 0 auto;
+
+    float: none;
+
+    padding-left: 2em;
+    padding-right: 2em;
+
+    background: black;
+    background: rgba(0, 0, 0, 0.95);
+}
+
+@media screen and (max-device-width: 720px) {
+    .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+.row-container {
+}
+
+h1, h2, h3 {
+    font-family: 'Lato', sans-serif;
+}
+
+.project-list {
+    list-style-type: none;
+}
+
+.project-list li {
+    padding-bottom: 1em;
+}
+
+.project-list img {
+    width: 15em;
+    display: block;
+    border: 1px solid #333;
+}
+
+.content {
+    text-align: justify;
+}
+
+.site .footer {
+    display: inline-block;
+}
+
+.site .contact {
+    padding-left: 1em;
+    display: inline-block;
+    float: right;
+}
+
+.projects {
+    margin-bottom: 1em;
+    margin-left: 0.5em;
+    /*border-left: 1px solid #333;*/
+}
+
+.projects > div {
+    /*text-align: left;*/
+    /*border: 1px solid #333;*/
+    border-left: none;
+}
+
+.projects img {
+    width: 100%;
+}
+
+.projects a {
+    text-decoration: none;
+}
+
+.projects :hover a {
+    text-decoration: underline;
+}
+
+
+.projects .t {
+    text-align: center;
+    font-weight: bolder;
+    margin-top: 0.3em;
+    font-size: 1.2em;
+}
