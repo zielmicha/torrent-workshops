@@ -1,3 +1,7 @@
+h1 {
+    margin-bottom: 0.4em;
+}
+
 .container {
     max-width: 790px;
 }
@@ -16,7 +20,7 @@ html {
 
 body {
     font-family: 'Open Sans', sans-serif;
-    background: url('/images/fractal4.jpg') black;
+    background: url('/images/fractal4white.jpg') white;
     background-size: 100%;
     background-repeat-y: no;
     background-attachment: fixed;
@@ -30,8 +34,9 @@ body {
     padding-left: 2em;
     padding-right: 2em;
 
-    background: black;
-    background: rgba(0, 0, 0, 0.95);
+    box-shadow: 0px 0px 3px 3px rgba(255, 255, 255, 0.5);
+    background: white;
+    background: rgba(255, 255, 255, 0.95);
 }
 
 @media screen and (max-device-width: 720px) {
@@ -59,7 +64,7 @@ h1, h2, h3 {
 .project-list img {
     width: 15em;
     display: block;
-    border: 1px solid #333;
+    border: 1px solid #bbb;
 }
 
 .content {
@@ -106,4 +111,24 @@ h1, h2, h3 {
     font-weight: bolder;
     margin-top: 0.3em;
     font-size: 1.2em;
+}
+
+.soclink .fa {
+    font-size: 5em;
+    color: black;
+}
+
+.soclink {
+    text-align: center;
+}
+
+.soclink span {
+    display: block;
+}
+
+.other-projects {
+    width: 100%;
+    background: white;
+    color: black;
+    border-color: #ccc;
 }
