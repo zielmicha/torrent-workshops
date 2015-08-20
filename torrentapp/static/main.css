@@ -67,10 +67,6 @@ h1, h2, h3 {
     border: 1px solid #bbb;
 }
 
-.content {
-    text-align: justify;
-}
-
 .site .footer {
     display: inline-block;
 }

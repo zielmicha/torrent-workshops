@@ -24,6 +24,13 @@
     <ul>
       <li><a href="https://docs.python.org/2/library/hashlib.html">hashlib docs</a>
       <li>Tip: your infohash starts with <code>{{ info_hash }}</code>
+    </ul>
+  <li>Make a request to tracker and observe it in <a href="/log">log</a>
+    <ul>
+      <li>use requests Python module
+      <li>request should have the following format:
+        <code>{{ tracker_url }}?info_hash=[raw info hash]&peer_id=[raw peer id]&uploaded=0&downloaded=0&left=[number of bytes left]&compact=1&key=[key]&port=6969&event=started</code>
+    </ul>
 </ol>
 
 <hr>
