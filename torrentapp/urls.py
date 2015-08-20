@@ -15,4 +15,5 @@ urlpatterns = [
 
     url(r'^api/push_log$', views.push_log),
     url(r'^api/torrent_data$', views.torrent_data),
+    url(r'^api/torrent_file$', views.torrent_file),
 ]

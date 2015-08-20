@@ -49,7 +49,7 @@ class Torrent(object):
         })
 
 def tracker_request(announce, info_hash, *, peer_id, port, uploaded, downloaded, left):
-    resp = requests.get(announce,
+    resp = requests.get(announce.decode(),
                         params=dict(peer_id=peer_id, port=port, uploaded=uploaded,
                                     downloaded=downloaded, left=left, info_hash=info_hash,
                                     compact='1'))

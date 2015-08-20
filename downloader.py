@@ -8,20 +8,7 @@ import math
 import hashlib
 import random
 
-protocol_header = b'\x13BitTorrent protocol'
-header_reserved = b'\0\0\0\0\0\0\0\0'
-
-message_types = {
-    'bitfield': 5,
-    'cancel': 8,
-    'choke': 0,
-    'have': 4,
-    'interested': 2,
-    'not interested': 3,
-    'piece': 7,
-    'request': 6,
-    'unchoke': 1
-}
+from protocol import protocol_header, header_reserved, message_types, PeerBase
 
 class LoggingFile(object):
     def __init__(self, file, path):
@@ -41,7 +28,7 @@ class LoggingFile(object):
         self.log.flush()
         return data
 
-class Peer(object):
+class Peer(PeerBase):
     def __init__(self, torrent, peer_id, addr):
         self.sock = socket.socket()
         self.addr = addr
@@ -57,7 +44,7 @@ class Peer(object):
 
         print('opened connection to', self.addr)
         self.file = self.sock.makefile('rwb')
-        if os.environ['LOGPEER']:
+        if os.environ.get('LOGPEER'):
             self.file = LoggingFile(self.file, os.environ['LOGPEER'])
         self.file.write(protocol_header + header_reserved)
         self.file.write(self.torrent.info_hash)
@@ -124,12 +111,6 @@ class Peer(object):
         self.send(message_types['request'],
                   struct.pack('!III', index, begin, length))
 
-    def send(self, id, payload):
-        print('send %d %r' % (id, payload))
-        self.file.write(struct.pack('!I', 1 + len(payload)) + bytes([id]))
-        self.file.write(payload)
-        self.file.flush()
-
 REQUEST_SIZE = 8 * 1024
 
 def mod(a, b):
@@ -175,7 +156,6 @@ class Downloader(object):
 
         self.chunk_queue.reverse()
         random.shuffle(self.chunk_queue)
-        print(self.chunk_queue)
 
     def add_data(self, piece_i, begin, data):
         self.chunks_left[piece_i] -= len(data)

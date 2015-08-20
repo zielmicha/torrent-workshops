@@ -41,6 +41,13 @@ def push_log(request):
     models.LogEntry.log(user=torrent.user, module='client', text=msg)
     return HttpResponse('ok')
 
+def torrent_file(request):
+    info_hash = request.REQUEST['info_hash']
+    torrent = models.Torrent.objects.get(info_hash=info_hash)
+    torrent_obj = models.Torrent.get(torrent.user, torrent.name)
+
+    return HttpResponse(torrent_obj.encode(), content_type='application/octet-stream')
+
 def torrent_data(request):
     info_hash = request.REQUEST['info_hash']
     try:

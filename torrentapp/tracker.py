@@ -19,7 +19,6 @@ def announce(request, tracker_id):
         raise
 
 def announce_inner(request, user, tracker_id):
-
     args = urllib_raw.urldecode(request.META['QUERY_STRING'].encode('utf8'))
     print(args)
     info_hash = args[b'info_hash']
@@ -31,13 +30,16 @@ def announce_inner(request, user, tracker_id):
         (None, (settings.SELF_IP, settings.CLIENT_PORT)),
     ]
 
+    if len(info_hash) != 20:
+        raise ValueError('info hash has invalid length (should have 20, has %d)'
+                         % len(info_hash))
+
     event = args.get(b'event')
     info = (request.META['REMOTE_ADDR'], int(args[b'port']))
     if event != b'stopped' and peer_id.startswith(b'-TR'):
         models.LogEntry.log(user, 'tracker', 'correct tracker request %s:%d peerid %s' % (
             info[0], info[1], peer_id))
         # data[info_hash][peer_id] = info
-
 
     resp = bencode.encode({
         b'interval': 10,
