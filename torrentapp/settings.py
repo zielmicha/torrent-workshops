@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'torrentapp',
+    'registration',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -71,6 +72,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'torrentapp.wsgi.application'
 
+REGISTRATION_OPEN = True
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -101,3 +103,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SITE_URL = 'http://torrent.www/'
+
+SELF_IP = '192.168.88.200'
+CLIENT_PORT = 9800

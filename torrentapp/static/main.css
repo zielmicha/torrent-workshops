@@ -20,7 +20,7 @@ html {
 
 body {
     font-family: 'Open Sans', sans-serif;
-    background: url('/images/fractal4white.jpg') white;
+    background: url('/static/fractal4white.jpg') white;
     background-size: 100%;
     background-repeat-y: no;
     background-attachment: fixed;

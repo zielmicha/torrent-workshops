@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<table class=table>
+{% for log in logs %}
+<tr>
+  <td>{{ log.timestamp }}
+  <td>{{ log.module }}
+  <td><code>{{ log.text }}</code>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

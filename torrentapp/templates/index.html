@@ -1,4 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% if user.is_authenticated %}
+<div>
+  Your private tracker URL is:
+  <br>{{ tracker_url }}
+</div>
+
+<hr>
+
+<ol>
+  <li><a href="/lorem.txt.torrent">Download example torrent</a>
+  <li>Parse torrent file (it's bencoded)
+    <ul>
+      <li>
+        <a href="https://github.com/zielmicha/torrent-workshops/blob/master/bencode.py">
+          example bencode.py</a>
+      <li>
+        <a href="https://en.wikipedia.org/wiki/Bencode">
+          bencode on Wikipedia</a>
+    </ul>
+  <li>Compute infohash (SHA1 of bencoded info section of torrent file)
+    <ul>
+      <li><a href="https://docs.python.org/2/library/hashlib.html">hashlib docs</a>
+      <li>Tip: your infohash starts with <code>{{ info_hash }}</code>
+</ol>
+
+<hr>
+
+<a href="/log" rol="button" class="btn btn-primary">View log</a>
+<a href="/lorem.txt.torrent" rol="button" class="btn btn-primary">Download torrent</a>
+{% else %}
+<a href="/accounts/login" rol="button" class="btn btn-primary">Login</a>
+{% endif %}
+
+
+
 {% endblock %}

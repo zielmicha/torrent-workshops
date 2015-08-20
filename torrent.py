@@ -2,11 +2,14 @@ import hashlib
 import ipaddress
 import struct
 import requests
+import time
+import math
 
 import bencode
 
 class Torrent(object):
     def __init__(self, torrent_dict):
+        self.torrent_dict = torrent_dict
         self.info = torrent_dict[b'info']
         self.announce = torrent_dict[b'announce']
 
@@ -21,6 +24,29 @@ class Torrent(object):
             pieces[20 * i: 20 * (i + 1)]
             for i in range(len(pieces) // 20)
         ]
+
+    def encode(self):
+        return bencode.encode(self.torrent_dict)
+
+    @classmethod
+    def make_from_data(cls, data, *, piece_length=4096, comment, announce, name):
+        pieces = []
+        for i in range(0, int(math.ceil(len(data) / piece_length))):
+            piece = data[i * piece_length:(i + 1) * piece_length]
+            pieces.append(hashlib.sha1(piece).digest())
+
+        info = {
+            b'piece length': piece_length,
+            b'length': len(data),
+            b'pieces': b''.join(pieces),
+            b'name': name
+        }
+        return cls({
+            b'creation date': int(time.time()),
+            b'comment': comment,
+            b'announce': announce,
+            b'info': info
+        })
 
 def tracker_request(announce, info_hash, *, peer_id, port, uploaded, downloaded, left):
     resp = requests.get(announce,
@@ -53,6 +79,15 @@ if __name__ == '__main__':
     import os
 
     v = bencode.Decoder(sys.stdin.buffer).decode()
+
+    for k in v:
+        if k != b'info':
+            print(k, ':', v[k])
+        else:
+            for ik, iv in v[k].items():
+                if ik != b'pieces':
+                    print('info', ik, ':', iv)
+
     torrent = Torrent(v)
 
     peer_id = os.urandom(20)
