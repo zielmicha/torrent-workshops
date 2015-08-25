@@ -67,15 +67,7 @@ class Peer(PeerBase):
         print('connected to %r' % other_id)
 
     def recv(self):
-        length, = struct.unpack('!I', self.file.read(4))
-        print('recv', length)
-        response = self.file.read(length)
-        if len(response) != length:
-            raise EOFError('read %d, expected %d' % (len(response), length))
-
-        print('response', repr(response)[:80])
-        type = response[0]
-        payload = response[1:]
+        type, payload = self.do_recv()
 
         if type == message_types['bitfield']:
             self.handle_bitfield(payload)

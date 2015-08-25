@@ -5,7 +5,7 @@ from torrentapp import views, tracker
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', views.index),
+    url(r'^(|part2-download)$', views.index),
     url(r'^log$', views.log),
     url(r'^users/$', views.redirect_to_front),
     url(r'^accounts/profile/$', views.redirect_to_front),

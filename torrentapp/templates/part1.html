@@ -2,6 +2,16 @@
 {% block content %}
 
 {% if user.is_authenticated %}
+<ol>
+  <li>
+    Grab Python 3.4 from <a href="http://zielmicha.www">zielmicha.www</a>.
+  <li>
+    Install requests
+    <pre>pip install http://zielmicha.www/requests-2.7.0.tar.gz</pre>
+</ol>
+
+<hr>
+
 <div>
   Your private tracker URL is:
   <br>{{ tracker_url }}
@@ -25,11 +35,13 @@
       <li><a href="https://docs.python.org/2/library/hashlib.html">hashlib docs</a>
       <li>Tip: your infohash starts with <code>{{ info_hash }}</code>
     </ul>
-  <li>Make a request to tracker and observe it in <a href="/log">log</a>
+  <li>Make a request to the tracker and observe it in <a href="/log">log</a>
     <ul>
       <li>use requests Python module
       <li>request should have the following format:
         <code>{{ tracker_url }}?info_hash=[raw info hash]&peer_id=[raw peer id]&uploaded=0&downloaded=0&left=[number of bytes left]&compact=1&key=[key]&port=6969&event=started</code>
+      <li>response is an bencoded dictionary
+      <li><a href="https://wiki.theory.org/BitTorrent_Tracker_Protocol">tracker protocol on theory.org</a>
     </ul>
 </ol>
 

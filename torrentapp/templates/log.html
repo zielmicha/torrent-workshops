@@ -3,7 +3,7 @@
 <table class=table>
 {% for log in logs %}
 <tr>
-  <td>{{ log.timestamp }}
+  <td>{{ log.timestamp|date:"H:i" }}
   <td>{{ log.module }}
   <td><code>{{ log.text }}</code>
 </tr>

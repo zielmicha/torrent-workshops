@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if user.is_authenticated %}
+
+<hr>
+
+<div>
+  Your private tracker URL is:
+  <br>{{ tracker_url }}
+</div>
+
+<hr>
+
+<ol>
+  <li>Connect to peer retrieved from tracker.
+  <li>
+    <a href="https://wiki.theory.org/BitTorrentSpecification">protocol specification on theory.org</a>
+  <li>parse bitmask
+  <li>download file lorem.txt
+</ol>
+
+<hr>
+
+<a href="/log" rol="button" class="btn btn-primary">View log</a>
+<a href="/lorem.txt.torrent" rol="button" class="btn btn-primary">Download torrent</a>
+{% else %}
+<a href="/accounts/login" rol="button" class="btn btn-primary">Login</a>
+{% endif %}
+
+
+
+{% endblock %}

@@ -5,14 +5,19 @@ from . import models
 from . import settings
 from binascii import hexlify
 
-def index(request):
+def index(request, section):
+    part = {
+        '': 1,
+        'part2-download': 2,
+    }[section]
+
     if request.user.is_authenticated():
         profile = models.Profile.get(request.user)
 
         torrent = models.Torrent.get(request.user, 'lorem.txt')
 
         tracker_url = profile.get_tracker_url()
-        return render(request, 'index.html', {
+        return render(request, 'part%d.html' % part, {
             'tracker_url': tracker_url,
             'info_hash': hexlify(torrent.info_hash)[:8]})
     else:

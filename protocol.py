@@ -17,7 +17,19 @@ message_types = {
 
 class PeerBase(object):
     def send(self, id, payload):
-        print('send %d %r' % (id, payload))
         self.file.write(struct.pack('!I', 1 + len(payload)) + bytes([id]))
         self.file.write(payload)
         self.file.flush()
+
+    def do_recv(self):
+        length, = struct.unpack('!I', self.file.read(4))
+        print('recv', length)
+        response = self.file.read(length)
+        if len(response) != length:
+            raise EOFError('read %d, expected %d' % (len(response), length))
+
+        print('response', repr(response)[:80])
+        type = response[0]
+        payload = response[1:]
+
+        return type, payload
