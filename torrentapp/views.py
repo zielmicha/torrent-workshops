@@ -10,6 +10,7 @@ def index(request, section):
         '': 1,
         'part2-download': 2,
     }[section]
+    template = 'part%d.html' % part
 
     if request.user.is_authenticated():
         profile = models.Profile.get(request.user)
@@ -17,11 +18,11 @@ def index(request, section):
         torrent = models.Torrent.get(request.user, 'lorem.txt')
 
         tracker_url = profile.get_tracker_url()
-        return render(request, 'part%d.html' % part, {
+        return render(request, template, {
             'tracker_url': tracker_url,
             'info_hash': hexlify(torrent.info_hash)[:8]})
     else:
-        return render(request, 'index.html')
+        return render(request, template)
 
 def redirect_to_front(request):
     return redirect('/')

@@ -28,7 +28,7 @@ class Uploader(PeerBase):
             self.socket.close()
         except Exception as exc:
             self.log('Error: %r' % exc)
-            if not isinstance(exc, socket.timeout):
+            if not isinstance(exc, (socket.timeout, BrokenPipeError)):
                 raise
 
     def close(self):
@@ -47,6 +47,9 @@ class Uploader(PeerBase):
 
     def recv(self):
         type, payload = self.do_recv()
+
+        if type is None:
+            return False
 
         if type == message_types['request']:
             return self.handle_request(payload)
@@ -126,7 +129,7 @@ class Uploader(PeerBase):
             self.log('premature EOF (peer id)')
             return
 
-        self.log('connection from peer %s', other_peer_id)
+        self.log('connection from peer %s, info hash %r', other_peer_id, self.info_hash)
 
         return True
 
@@ -140,7 +143,7 @@ class Uploader(PeerBase):
                 mask |= (1 << (7 - j))
             bits.append(mask)
 
-        print(bits)
+        # print(bits)
         self.send(message_types['bitfield'], bytes(bits))
         time.sleep(1)
         self.send(message_types['unchoke'], b'')

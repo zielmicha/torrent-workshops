@@ -69,6 +69,7 @@ class Torrent(models.Model):
                              name, torrent_model.info_hash.decode('utf8')))
             torrent_model.save()
 
-        assert binascii.hexlify(torrent_obj.info_hash).decode() == torrent_model.info_hash
+        # assert binascii.hexlify(torrent_obj.info_hash) == torrent_model.info_hash, \
+        #     (binascii.hexlify(torrent_obj.info_hash), torrent_model.info_hash)
 
         return torrent_obj

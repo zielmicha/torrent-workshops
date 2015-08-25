@@ -41,6 +41,9 @@ def announce_inner(request, user, tracker_id):
             info[0], info[1], peer_id))
         # data[info_hash][peer_id] = info
 
+    models.LogEntry.log(user, 'tracker', 'successful request peerid=%r address=%r:%r' % (
+        peer_id, info[0], info[1]))
+
     resp = bencode.encode({
         b'interval': 10,
         b'peers': b''.join([

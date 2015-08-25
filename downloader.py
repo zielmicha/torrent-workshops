@@ -69,6 +69,9 @@ class Peer(PeerBase):
     def recv(self):
         type, payload = self.do_recv()
 
+        if type is None:
+            return
+
         if type == message_types['bitfield']:
             self.handle_bitfield(payload)
         elif type == message_types['have']:
@@ -189,7 +192,8 @@ class Downloader(object):
 
         while True:
             self.maybe_send_requests(peer)
-            peer.recv()
+            if not peer.recv():
+                break
             self.add_recv_data(peer)
 
     def add_recv_data(self, peer):

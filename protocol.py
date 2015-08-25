@@ -22,7 +22,10 @@ class PeerBase(object):
         self.file.flush()
 
     def do_recv(self):
-        length, = struct.unpack('!I', self.file.read(4))
+        length_data = self.file.read(4)
+        if not length_data:
+            return None, None
+        length, = struct.unpack('!I', length_data)
         print('recv', length)
         response = self.file.read(length)
         if len(response) != length:
