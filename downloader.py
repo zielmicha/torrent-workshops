@@ -7,6 +7,8 @@ import struct
 import math
 import hashlib
 import random
+import locks
+import threading
 
 from protocol import protocol_header, header_reserved, message_types, PeerBase
 
@@ -91,7 +93,7 @@ class Peer(PeerBase):
     def handle_bitfield(self, payload):
         for i in range(len(self.have_pieces)):
             ch = i // 8
-            bit = i % 8
+            bit = 7 - (i % 8)
             self.have_pieces[i] = (payload[ch] >> bit) & 1
 
     def handle_have(self, payload):
@@ -133,6 +135,8 @@ class Downloader(object):
         self.data_left = 0
         self.data = bytearray(torrent.length)
 
+        self.lock = locks.lock()
+
     def setup_queue(self):
         for piece_i in range(len(self.torrent.pieces)):
             if piece_i == len(self.torrent.pieces) - 1:
@@ -153,7 +157,7 @@ class Downloader(object):
                 self.chunk_queue.append((piece_i, chunk_i, chunk_size))
 
         self.chunk_queue.reverse()
-        random.shuffle(self.chunk_queue)
+        # random.shuffle(self.chunk_queue)
 
     def add_data(self, piece_i, begin, data):
         self.chunks_left[piece_i] -= len(data)
@@ -165,6 +169,7 @@ class Downloader(object):
 
         if self.chunks_left[piece_i] == 0:
             self.verify(piece_i)
+        assert self.chunks_left[piece_i] >= 0
 
     def verify(self, piece_i):
         print('verify %d' % piece_i)
@@ -180,8 +185,8 @@ class Downloader(object):
         self.setup_queue()
         self.tracker_request()
 
-        addr = self.tracker_response[0]
-        self.peer_main(addr)
+        for addr in self.tracker_response:
+            threading.Thread(target=self.peer_main, args=[addr]).start()
 
     def tracker_request(self):
         self.tracker_response = torrent.tracker_request(
@@ -193,12 +198,17 @@ class Downloader(object):
         peer = Peer(addr=addr, peer_id=self.peer_id, torrent=self.torrent)
         peer.init()
 
-        while True:
-            self.maybe_send_requests(peer)
-            if not peer.recv():
-                print('connection closed')
-                break
-            self.add_recv_data(peer)
+        with self.lock.locked():
+
+            while True:
+                self.maybe_send_requests(peer)
+
+                with self.lock.unlocked():
+                    if not peer.recv():
+                        print('connection closed')
+                        break
+
+                self.add_recv_data(peer)
 
     def add_recv_data(self, peer):
         for piece, begin, data in peer.got_pieces:
@@ -220,9 +230,16 @@ class Downloader(object):
             return
 
         while peer.queued_requests < 10:
-            piece_i, chunk_i, chunk_size = self.chunk_queue.pop()
+            for i in reversed(range(len(self.chunk_queue))):
+                piece_i, chunk_i, chunk_size = self.chunk_queue[i]
+                if peer.have_pieces[piece_i]:
+                    self.chunk_queue.pop(i)
+                    break
+
             print('pop', piece_i, chunk_i, chunk_size)
-            peer.send_request(piece_i, chunk_i * REQUEST_SIZE, chunk_size)
+
+            with self.lock.unlocked():
+                peer.send_request(piece_i, chunk_i * REQUEST_SIZE, chunk_size)
 
     def handle_finish(self):
         for i in range(len(self.torrent.pieces)):

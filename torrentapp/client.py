@@ -18,7 +18,7 @@ class Uploader(PeerBase):
     def __init__(self, socket, addr, has_func):
         self.socket = socket
         self.addr = addr
-        self.socket.settimeout(10)
+        self.socket.settimeout(180)
         self.file = self.socket.makefile('rwb')
         self.info_hash = None
         self.has_func = has_func
