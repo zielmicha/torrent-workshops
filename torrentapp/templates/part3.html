@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if user.is_authenticated %}
+
+<hr>
+
+<div>
+  Your private tracker URL is:
+  <br>{{ tracker_url }}
+</div>
+
+<hr>
+
+
+<hr>
+
+<a href="/log" rol="button" class="btn btn-primary">View log</a>
+<a href="/2Xbox-4.avi.torrent" rol="button" class="btn btn-primary">Download torrent for streaming</a>
+
+{% else %}
+<a href="/accounts/login" rol="button" class="btn btn-primary">Login</a>
+{% endif %}
+
+
+
+{% endblock %}

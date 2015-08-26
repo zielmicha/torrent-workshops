@@ -15,12 +15,13 @@ from protocol import protocol_header, header_reserved, message_types, PeerBase
 
 
 class Uploader(PeerBase):
-    def __init__(self, socket, addr):
+    def __init__(self, socket, addr, has_func):
         self.socket = socket
         self.addr = addr
         self.socket.settimeout(10)
         self.file = self.socket.makefile('rwb')
         self.info_hash = None
+        self.has_func = has_func
 
     def run(self):
         try:
@@ -28,7 +29,7 @@ class Uploader(PeerBase):
             self.socket.close()
         except Exception as exc:
             self.log('Error: %r' % exc)
-            if not isinstance(exc, (socket.timeout, BrokenPipeError)):
+            if not isinstance(exc, (socket.timeout, BrokenPipeError, ConnectionResetError)):
                 raise
 
     def close(self):
@@ -70,6 +71,10 @@ class Uploader(PeerBase):
     def handle_request(self, payload):
         index, begin, length = struct.unpack('!III', payload)
 
+        if not self.has_func(index):
+            self.log('I don\'t have this piece (%d)', index)
+            return self.close()
+
         if length > 64 * 1024 or length <= 0:
             self.log('invalid length %d', length)
             return self.close()
@@ -89,6 +94,8 @@ class Uploader(PeerBase):
                      len(self.torrent_data), offset + length)
             return self.close()
 
+        bps = 100 * 1024
+        time.sleep(length / bps)
         self.send_piece(index, begin, self.torrent_data[offset: offset + length])
 
         return True
@@ -140,7 +147,8 @@ class Uploader(PeerBase):
         for i in range(0, piece_count, 8):
             mask = 0
             for j in range(min(8, piece_count - i)):
-                mask |= (1 << (7 - j))
+                if self.has_func(i + j):
+                    mask |= (1 << (7 - j))
             bits.append(mask)
 
         # print(bits)
@@ -156,7 +164,8 @@ class Uploader(PeerBase):
 
     def get_torrent(self):
         resp = requests.get(settings.SITE_URL + 'api/torrent_file',
-                            params={'info_hash': hexlify(self.info_hash)})
+                            params={'info_hash': hexlify(self.info_hash),
+                                    'part': ''})
         resp.raise_for_status()
         return torrent.Torrent(bencode.decode(resp.content))
 
@@ -175,18 +184,32 @@ class Uploader(PeerBase):
         else:
             print('log', self.addr, msg)
 
-def main():
+def run_peer(port, has_func):
     server = socket.socket()
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((settings.SELF_IP, settings.CLIENT_PORT))
+    server.bind((settings.SELF_IP, port))
     server.listen(254)
 
     while True:
         sock, addr = server.accept()
         print('connection from', addr)
-        uploader = Uploader(sock, addr)
+        uploader = Uploader(sock, addr, has_func)
         threading.Thread(target=Uploader.run, args=[uploader]).start()
         del sock
+
+def main():
+    import hashlib
+
+    def get_has_func(i):
+        if i == 0:
+            return lambda x: True
+        else:
+            return lambda x: (x + i) % 5 \
+                not in (0, 2)
+
+    for i in [0, 1, 2, 3]:
+        threading.Thread(target=run_peer, args=[
+            settings.CLIENT_PORT + i, get_has_func(i)]).start()
 
 if __name__ == '__main__':
     main()

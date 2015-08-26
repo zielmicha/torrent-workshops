@@ -21,8 +21,8 @@ class Profile(models.Model):
         profile, q = cls.objects.get_or_create(user=user)
         return profile
 
-    def get_tracker_url(self):
-        return settings.SITE_URL + 'tracker/' + self.tracker_token + '/announce'
+    def get_tracker_url(self, part):
+        return settings.SITE_URL + 'tracker/' + self.tracker_token + '_' + part + '/announce'
 
 class LogEntry(models.Model):
     user = models.ForeignKey(User, related_name='+')
@@ -41,14 +41,23 @@ class Torrent(models.Model):
     token = models.CharField(max_length=60)
 
     def get_data(self):
-        data = open('torrentapp/templates/%s' % self.name, 'rb').read()
-        return data.replace(b'{{ token }}', self.token.encode('utf8'))
+        if self.name.endswith('.txt'):
+            data = open('torrentapp/templates/%s' % self.name, 'rb').read()
+            return data.replace(b'{{ token }}', self.token.encode('utf8'))
+        else:
+            data = open('%s' % self.name, 'rb').read()
+            return data + self.token.encode()
 
     @classmethod
     @transaction.atomic
-    def get(cls, user, name):
-        assert name in ['lorem.txt']
+    def get(cls, user, name, part):
+        assert name in ['lorem.txt', 'Xbox-4.avi']
         assert '/' not in name
+
+        if name.endswith('.txt'):
+            piece_length = 4096
+        else:
+            piece_length = 64 * 1024
 
         try:
             torrent_model = Torrent.objects.get(user=user, name=name)
@@ -58,8 +67,9 @@ class Torrent(models.Model):
 
         torrent_obj = torrent.Torrent.make_from_data(
             torrent_model.get_data(),
+            piece_length=piece_length,
             comment=('Torrent %s for user %s.' % (name, user.username)).encode('utf8'),
-            announce=user.profile.get_tracker_url().encode(),
+            announce=user.profile.get_tracker_url(part).encode(),
             name=name.encode('utf8'))
 
         if not torrent_model.pk:

@@ -68,6 +68,7 @@ class Peer(PeerBase):
 
     def recv(self):
         type, payload = self.do_recv()
+        print('recv', type)
 
         if type is None:
             return
@@ -84,6 +85,8 @@ class Peer(PeerBase):
             self.queued_requests = 0
         elif type == message_types['piece']:
             self.handle_piece(payload)
+
+        return True
 
     def handle_bitfield(self, payload):
         for i in range(len(self.have_pieces)):
@@ -193,6 +196,7 @@ class Downloader(object):
         while True:
             self.maybe_send_requests(peer)
             if not peer.recv():
+                print('connection closed')
                 break
             self.add_recv_data(peer)
 

@@ -8,17 +8,18 @@ import ipaddress
 import struct
 import traceback
 
-def announce(request, tracker_id):
+def announce(request, tracker_id, part):
+    part = part.strip('_')
     user = models.Profile.objects.get(tracker_token=tracker_id).user
 
     try:
-        return announce_inner(request, user, tracker_id)
+        return announce_inner(request, user, tracker_id, part)
     except Exception as exc:
         traceback.print_exc()
         models.LogEntry.log(user, 'tracker', 'error: %r' % exc)
         raise
 
-def announce_inner(request, user, tracker_id):
+def announce_inner(request, user, tracker_id, part):
     args = urllib_raw.urldecode(request.META['QUERY_STRING'].encode('utf8'))
     print(args)
     info_hash = args[b'info_hash']
@@ -26,9 +27,15 @@ def announce_inner(request, user, tracker_id):
 
     models.LogEntry.log(user, 'tracker', 'request from %r' % peer_id)
 
-    data = [
-        (None, (settings.SELF_IP, settings.CLIENT_PORT)),
-    ]
+    if part == '2':
+        data = [
+            (None, (settings.SELF_IP, settings.CLIENT_PORT + 1)),
+            (None, (settings.SELF_IP, settings.CLIENT_PORT + 2)),
+        ]
+    else:
+        data = [
+            (None, (settings.SELF_IP, settings.CLIENT_PORT)),
+        ]
 
     if len(info_hash) != 20:
         raise ValueError('info hash has invalid length (should have 20, has %d)'
